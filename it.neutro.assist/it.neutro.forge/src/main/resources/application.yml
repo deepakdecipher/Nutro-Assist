@@ -1,0 +1,22 @@
+server:
+  port: 8081
+
+spring:
+  application:
+    name: it.neutro.forge
+  datasource:
+    url: jdbc:postgresql://localhost:5432/usermanagement
+    username: postgres
+    password: postgres
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+user-management:
+  email:
+    enabled: false
+
+logging:
+  level:
+    org.springframework.security: DEBUG
