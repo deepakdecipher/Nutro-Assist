@@ -10,7 +10,7 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
-public class SecurityConfig {
+public class AppSecurityConfig {
 
     private static final String[] PUBLIC_PATHS = {
             "/userApi/login",
