@@ -1,8 +1,8 @@
 FROM maven:3.9.6-eclipse-temurin-21 AS build
 WORKDIR /app
 
-COPY */pom.xml ./ 2>/dev/null || COPY pom.xml ./
-COPY */src ./src 2>/dev/null || COPY src ./src
+COPY pom.xml .
+COPY src ./src
 
 RUN mvn clean package -DskipTests
 
