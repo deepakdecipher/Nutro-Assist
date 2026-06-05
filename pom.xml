@@ -63,6 +63,8 @@
 			<groupId>com.usermanagement</groupId>
 			<artifactId>user-management-spring-boot-starter</artifactId>
 			<version>1.0.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/user-management-spring-boot-starter-1.0.0.jar</systemPath>
 		</dependency>
 
 		<dependency>
