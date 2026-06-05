@@ -59,10 +59,18 @@
 			<artifactId>spring-boot-starter-webmvc-test</artifactId>
 			<scope>test</scope>
 		</dependency>
+		<!--<dependency>
+			<groupId>com.usermanagement</groupId>
+			<artifactId>user-management-spring-boot-starter</artifactId>
+			<version>1.0.0</version>
+		</dependency>-->
+
 		<dependency>
 			<groupId>com.usermanagement</groupId>
 			<artifactId>user-management-spring-boot-starter</artifactId>
 			<version>1.0.0</version>
+			<scope>system</scope>
+			<systemPath>${project.basedir}/libs/user-management-spring-boot-starter-1.0.0.jar</systemPath>
 		</dependency>
 
 	</dependencies>
@@ -116,6 +124,7 @@
 						</configuration>
 					</execution>
 				</executions>
+
 			</plugin>
 		</plugins>
 	</build>
