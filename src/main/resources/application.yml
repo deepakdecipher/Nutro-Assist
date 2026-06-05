@@ -1,0 +1,62 @@
+server:
+  port: ${SERVER_PORT:8081}
+
+spring:
+  application:
+    name: it.neutro.forge
+  mail:
+    host: ${MAIL_HOST:smtp.gmail.com}
+    port: ${MAIL_PORT:587}
+    username: ${SMTP_USERNAME:}
+    password: ${SMTP_PASSWORD:}
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+  datasource:
+    url: ${SPRING_DATASOURCE_URL:${USER_MGMT_DB_URL:jdbc:postgresql://localhost:5432/usermanagement}}
+    username: ${SPRING_DATASOURCE_USERNAME:${USER_MGMT_DB_USERNAME:postgres}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${USER_MGMT_DB_PASSWORD:postgres}}
+  jpa:
+    hibernate:
+      ddl-auto: update
+    open-in-view: false
+
+user-management:
+  enabled: ${USER_MANAGEMENT_ENABLED:true}
+  api:
+    base-path: ${USER_MANAGEMENT_API_BASE_PATH:/userApi}
+  security:
+    cors-enabled: ${USER_MANAGEMENT_CORS_ENABLED:false}
+    csrf-enabled: ${USER_MANAGEMENT_CSRF_ENABLED:false}
+    http-basic-enabled: ${USER_MANAGEMENT_HTTP_BASIC_ENABLED:true}
+    public-endpoints: ${USER_MANAGEMENT_PUBLIC_ENDPOINTS:/userApi/login,/userApi/sign-up,/userApi/reset-password}
+  authentication:
+    token-header: ${USER_MANAGEMENT_TOKEN_HEADER:Authorization}
+    token-prefix: ${USER_MANAGEMENT_TOKEN_PREFIX:Bearer }
+  jwt:
+    secret: ${USER_MANAGEMENT_JWT_SECRET:change-me-in-env}
+    access-token-validity-millis: ${USER_MANAGEMENT_ACCESS_TOKEN_TTL_MS:1200000}
+    refresh-token-validity-millis: ${USER_MANAGEMENT_REFRESH_TOKEN_TTL_MS:3600000}
+  otp:
+    enabled: ${USER_MANAGEMENT_OTP_ENABLED:true}
+    length: ${USER_MANAGEMENT_OTP_LENGTH:6}
+    expiration-minutes: ${USER_MANAGEMENT_OTP_EXPIRATION_MINUTES:5}
+  email:
+    enabled: ${USER_MANAGEMENT_EMAIL_ENABLED:true}
+    smtp-host: ${MAIL_HOST:smtp.gmail.com}
+    smtp-port: ${MAIL_PORT:587}
+    smtp-username: ${SMTP_USERNAME:}
+    smtp-password: ${SMTP_PASSWORD:}
+    from: ${MAIL_FROM:${SMTP_USERNAME:}}
+    subject: ${USER_MANAGEMENT_EMAIL_SUBJECT:OTP Verification}
+  features:
+    sign-up-enabled: ${FEATURE_SIGN_UP_ENABLED:true}
+    otp-enabled: ${FEATURE_OTP_ENABLED:true}
+    reset-password-enabled: ${FEATURE_RESET_PASSWORD_ENABLED:true}
+
+logging:
+  level:
+    org.springframework.security: ${SECURITY_LOG_LEVEL:INFO}

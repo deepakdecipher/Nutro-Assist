@@ -1,0 +1,72 @@
+version: "2.4"
+
+services:
+  postgres:
+    image: postgres:12
+    container_name: neutro-forge-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: ${POSTGRES_DB:-usermanagement}
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+    ports:
+      - "${POSTGRES_HOST_PORT:-5433}:${POSTGRES_CONTAINER_PORT:-5432}"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d usermanagement"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: neutro-forge:latest
+    container_name: neutro-forge-app
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "${APP_PORT:-8081}:8081"
+    environment:
+      SPRING_DATASOURCE_URL: ${SPRING_DATASOURCE_URL:-jdbc:postgresql://postgres:5432/usermanagement}
+      SPRING_DATASOURCE_USERNAME: ${SPRING_DATASOURCE_USERNAME:-postgres}
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD:-postgres}
+      USER_MANAGEMENT_API_BASE_PATH: ${USER_MANAGEMENT_API_BASE_PATH:-/userApi}
+      USER_MANAGEMENT_PUBLIC_ENDPOINTS: ${USER_MANAGEMENT_PUBLIC_ENDPOINTS:-/userApi/login,/userApi/sign-up,/userApi/reset-password}
+      USER_MANAGEMENT_JWT_SECRET: ${USER_MANAGEMENT_JWT_SECRET:-change-me-in-env}
+      USER_MANAGEMENT_ACCESS_TOKEN_TTL_MS: ${USER_MANAGEMENT_ACCESS_TOKEN_TTL_MS:-1200000}
+      USER_MANAGEMENT_REFRESH_TOKEN_TTL_MS: ${USER_MANAGEMENT_REFRESH_TOKEN_TTL_MS:-3600000}
+      USER_MANAGEMENT_OTP_LENGTH: ${USER_MANAGEMENT_OTP_LENGTH:-6}
+      USER_MANAGEMENT_OTP_EXPIRATION_MINUTES: ${USER_MANAGEMENT_OTP_EXPIRATION_MINUTES:-5}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      MAIL_FROM: ${MAIL_FROM:-}
+      USER_MANAGEMENT_EMAIL_ENABLED: ${USER_MANAGEMENT_EMAIL_ENABLED:-false}
+      FEATURE_SIGN_UP_ENABLED: ${FEATURE_SIGN_UP_ENABLED:-true}
+      FEATURE_OTP_ENABLED: ${FEATURE_OTP_ENABLED:-true}
+      FEATURE_RESET_PASSWORD_ENABLED: ${FEATURE_RESET_PASSWORD_ENABLED:-true}
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: nutro-assist-web:latest
+    container_name: nutro-assist-web
+    restart: unless-stopped
+    depends_on:
+      - app
+    ports:
+      - "${WEB_PORT:-3000}:3000"
+    environment:
+      NEXT_PUBLIC_AUTH_API_BASE_URL: ${NEXT_PUBLIC_AUTH_API_BASE_URL:-http://localhost:8081}
+      NEXT_PUBLIC_AUTH_API_BASE_PATH: ${NEXT_PUBLIC_AUTH_API_BASE_PATH:-/userApi}
+      NEXT_PUBLIC_FEATURE_SIGN_UP: ${NEXT_PUBLIC_FEATURE_SIGN_UP:-true}
+      NEXT_PUBLIC_FEATURE_OTP: ${NEXT_PUBLIC_FEATURE_OTP:-true}
+      NEXT_PUBLIC_FEATURE_RESET_PASSWORD: ${NEXT_PUBLIC_FEATURE_RESET_PASSWORD:-true}
+
+volumes:
+  postgres_data:
