@@ -23,8 +23,15 @@ spring:
     hibernate:
       ddl-auto: update
     open-in-view: false
+  liquibase:
+    change-log: classpath:db/changelog/db.changelog-master.xml
+    enabled: true
 
 user-management:
   email:
     enabled: ${USER_MANAGEMENT_EMAIL_ENABLED:true}
-    from: ${MAIL_FROM:${MAIL_USERNAME:sandeep.ray@decipherzone.com}}
+    from: ${MAIL_FROM:deepakashu28@gmail.com}
+    # "brevo" on server (Render free blocks SMTP); "smtp" for local dev
+    provider: ${EMAIL_PROVIDER:brevo}
+  brevo:
+    api-key: ${BREVO_API_KEY}

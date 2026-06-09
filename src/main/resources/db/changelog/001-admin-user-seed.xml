@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <!--
+        Changelog 001: Seed admin user.
+        The actual password hashing is handled by AdminUserInitializer.java at startup,
+        which uses Spring's BCryptPasswordEncoder. This changeset is a no-op placeholder
+        kept here so Liquibase tracking is in place for future schema migrations.
+
+        The admin user (username=admin, password=admin, role=SUPER_ADMIN, verified=true)
+        is created programmatically by AdminUserInitializer only if it does not already exist.
+    -->
+    <changeSet id="001-admin-seed-marker" author="nutro-assist" runOnChange="false">
+        <sql>
+            -- Admin user is seeded via AdminUserInitializer.java (Spring ApplicationRunner)
+            -- This changeset exists as a Liquibase migration marker only.
+            SELECT 1;
+        </sql>
+    </changeSet>
+
+</databaseChangeLog>
