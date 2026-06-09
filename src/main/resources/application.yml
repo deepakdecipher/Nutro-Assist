@@ -34,4 +34,4 @@ user-management:
     # "brevo" on server (Render free blocks SMTP); "smtp" for local dev
     provider: ${EMAIL_PROVIDER:brevo}
   brevo:
-    api-key: ${BREVO_API_KEY}
+    api-key: ${BREVO_API_KEY:test}
