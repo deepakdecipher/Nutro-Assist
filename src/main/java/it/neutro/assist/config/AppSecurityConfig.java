@@ -19,6 +19,7 @@ public class AppSecurityConfig {
             "/userApi/login-otp",
             "/userApi/unified/generate-otp/**",
             "/userApi/unified/login-otp",
+            "/userApi/unified/login-phone",
             "/userApi/sign-up",
             "/userApi/verify-otp/**",
             "/userApi/generate-otp/**",

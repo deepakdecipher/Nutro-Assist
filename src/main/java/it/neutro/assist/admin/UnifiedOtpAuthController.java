@@ -1,6 +1,7 @@
 package it.neutro.assist.admin;
 
 import com.usermanagement.config.CustomUserDetails;
+import com.usermanagement.firebase.FirebaseTokenVerifier;
 import com.usermanagement.jwt.JwtUtil;
 import com.usermanagement.modelentity.Role;
 import com.usermanagement.modelentity.User;
@@ -25,25 +26,35 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/userApi/unified")
 public class UnifiedOtpAuthController {
+
     private final UserRepository userRepository;
     private final UserService userService;
     private final GenerateOtp generateOtp;
     private final JwtUtil jwtUtil;
     private final PasswordEncoder passwordEncoder;
+    private final FirebaseTokenVerifier firebaseTokenVerifier;
 
     public UnifiedOtpAuthController(
             UserRepository userRepository,
             UserService userService,
             GenerateOtp generateOtp,
             JwtUtil jwtUtil,
-            PasswordEncoder passwordEncoder) {
+            PasswordEncoder passwordEncoder,
+            FirebaseTokenVerifier firebaseTokenVerifier) {
         this.userRepository = userRepository;
         this.userService = userService;
         this.generateOtp = generateOtp;
         this.jwtUtil = jwtUtil;
         this.passwordEncoder = passwordEncoder;
+        this.firebaseTokenVerifier = firebaseTokenVerifier;
     }
 
+    // ── Email OTP flow ────────────────────────────────────────────────────────
+
+    /**
+     * Sends an OTP to the given email. Auto-creates the user if they don't exist yet
+     * (passwordless sign-up + sign-in unified into one flow).
+     */
     @PostMapping("/generate-otp/{emailId}")
     @Transactional
     public ResponseEntity<String> generateUnifiedOtp(@PathVariable String emailId) {
@@ -62,6 +73,9 @@ public class UnifiedOtpAuthController {
         return ResponseEntity.ok("OTP sent to " + email);
     }
 
+    /**
+     * Validates the email OTP and returns a JWT. Marks the user as verified on first login.
+     */
     @PostMapping("/login-otp")
     @Transactional
     public ResponseEntity<JwtResponse> loginWithUnifiedOtp(@RequestBody UnifiedOtpLoginRequest request) {
@@ -76,13 +90,72 @@ public class UnifiedOtpAuthController {
         }
         userRepository.save(user);
 
+        return ResponseEntity.ok(buildJwtResponse(user));
+    }
+
+    // ── Phone OTP flow (Firebase) ─────────────────────────────────────────────
+
+    /**
+     * Exchanges a Firebase phone-auth ID token for an app JWT.
+     *
+     * The client (FE) drives the SMS OTP flow via the Firebase JS SDK:
+     *   1. {@code signInWithPhoneNumber(auth, phone, recaptchaVerifier)} — Firebase sends SMS
+     *   2. {@code confirmationResult.confirm(otp)} — validates OTP with Firebase
+     *   3. {@code userCredential.user.getIdToken()} — gets the ID token sent here
+     *
+     * The user is auto-created on first login (phone-only account).
+     */
+    @PostMapping("/login-phone")
+    @Transactional
+    public ResponseEntity<JwtResponse> loginWithPhone(@RequestBody PhoneLoginRequest request) {
+        String phone = firebaseTokenVerifier.verifyAndGetPhoneNumber(request.idToken());
+
+        User user = userRepository.findByPhoneNumber(phone)
+                .orElseGet(() -> createPhoneUser(phone));
+
+        user.setVerified(true);
+        user.setPhoneNumber(phone);
+        userRepository.save(user);
+
+        return ResponseEntity.ok(buildJwtResponse(user));
+    }
+
+    // ── Helpers ───────────────────────────────────────────────────────────────
+
+    private User createPhoneUser(String phone) {
+        String digits = phone.replaceAll("[^0-9]", "");
+        String last4 = digits.length() >= 4 ? digits.substring(digits.length() - 4) : digits;
+
+        String baseUserName = "phone_" + digits;
+        String candidate = baseUserName;
+        int suffix = 1;
+        while (userRepository.existsByUserName(candidate)) {
+            candidate = baseUserName + "_" + suffix++;
+        }
+
+        // Phone-only users get a synthetic internal email (never shown to the user)
+        String syntheticEmail = "phone_" + digits + "@nutro-assist.phone";
+
+        User user = User.builder()
+                .userFullName("User " + last4)
+                .userName(candidate)
+                .email(syntheticEmail)
+                .phoneNumber(phone)
+                .password(passwordEncoder.encode(UUID.randomUUID().toString() + "Aa1!"))
+                .verified(true)
+                .roles(Set.of(Role.builder().roleName("USER").build()))
+                .build();
+        return userRepository.save(user);
+    }
+
+    private JwtResponse buildJwtResponse(User user) {
         CustomUserDetails userDetails = new CustomUserDetails(user);
         String token = jwtUtil.generateToken(userDetails);
         String refreshToken = jwtUtil.generateRefreshToken(userDetails);
         Set<String> roles = userDetails.getAuthorities().stream()
                 .map(Object::toString)
                 .collect(Collectors.toSet());
-        return ResponseEntity.ok(new JwtResponse(token, refreshToken, roles));
+        return new JwtResponse(token, refreshToken, roles);
     }
 
     private String normalizeEmail(String email) {

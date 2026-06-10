@@ -35,3 +35,5 @@ user-management:
     provider: ${EMAIL_PROVIDER:brevo}
   brevo:
     api-key: ${BREVO_API_KEY:test}
+  firebase:
+    project-id: ${FIREBASE_PROJECT_ID:nutro-assist}
