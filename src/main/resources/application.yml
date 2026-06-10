@@ -27,6 +27,9 @@ spring:
     change-log: classpath:db/changelog/db.changelog-master.xml
     enabled: true
 
+groq:
+  api-key: ${GROQ_API_KEY:test}
+
 user-management:
   email:
     enabled: ${USER_MANAGEMENT_EMAIL_ENABLED:true}
@@ -34,6 +37,6 @@ user-management:
     # "brevo" on server (Render free blocks SMTP); "smtp" for local dev
     provider: ${EMAIL_PROVIDER:brevo}
   brevo:
-    api-key: ${BREVO_API_KEY:test}
+    api-key: ${BREVO_API_KEY:}
   firebase:
     project-id: ${FIREBASE_PROJECT_ID:nutro-assist}
