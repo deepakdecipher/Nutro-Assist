@@ -1,23 +1,24 @@
 package it.neutro.assist.config;
 
 import com.usermanagement.jwt.JwtAuthenticationFilter;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
+@EnableMethodSecurity
 public class AppSecurityConfig {
 
     private static final String[] PUBLIC_PATHS = {
             "/userApi/login",
             "/userApi/login-otp",
+            "/userApi/unified/generate-otp/**",
+            "/userApi/unified/login-otp",
             "/userApi/sign-up",
             "/userApi/verify-otp/**",
             "/userApi/generate-otp/**",
