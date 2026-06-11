@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: it.neutro.assist
+  config:
+    import: "optional:classpath:application-local.yml"
   mail:
     host: ${MAIL_HOST:smtp.gmail.com}
     port: ${MAIL_PORT:587}
@@ -26,6 +28,11 @@ spring:
   liquibase:
     change-log: classpath:db/changelog/db.changelog-master.xml
     enabled: true
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 50MB
+      max-request-size: 50MB
 
 groq:
   api-key: ${GROQ_API_KEY:test}
@@ -37,6 +44,6 @@ user-management:
     # "brevo" on server (Render free blocks SMTP); "smtp" for local dev
     provider: ${EMAIL_PROVIDER:brevo}
   brevo:
-    api-key: ${BREVO_API_KEY:}
+    api-key: ${BREVO_API_KEY:test}
   firebase:
     project-id: ${FIREBASE_PROJECT_ID:nutro-assist}

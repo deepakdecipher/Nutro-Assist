@@ -7,5 +7,6 @@
 
     <!-- Future schema migrations can be added here as new changeset files -->
     <include file="db/changelog/001-admin-user-seed.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/002-knowledge-base.xml" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

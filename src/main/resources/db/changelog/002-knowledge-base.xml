@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+        http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
+
+    <changeSet id="002-knowledge-sources" author="nutro-assist">
+        <createTable tableName="knowledge_sources">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="file_name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="file_type" type="VARCHAR(50)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="total_chunks" type="INT" defaultValueNumeric="0"/>
+            <column name="uploaded_at" type="TIMESTAMP" defaultValueComputed="NOW()"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="002-knowledge-chunks" author="nutro-assist">
+        <createTable tableName="knowledge_chunks">
+            <column name="id" type="BIGSERIAL">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="source_id" type="BIGINT">
+                <constraints nullable="false" foreignKeyName="fk_chunk_source"
+                             references="knowledge_sources(id)" deleteCascade="true"/>
+            </column>
+            <column name="content" type="TEXT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="chunk_index" type="INT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+        <createIndex tableName="knowledge_chunks" indexName="idx_chunks_source_id">
+            <column name="source_id"/>
+        </createIndex>
+    </changeSet>
+
+</databaseChangeLog>

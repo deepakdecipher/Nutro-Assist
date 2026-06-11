@@ -1,11 +1,12 @@
 package it.neutro.assist.chat;
 
+import it.neutro.assist.knowledge.KnowledgeService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.http.MediaType;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestClient;
 import org.springframework.web.client.RestClientException;
-import org.springframework.http.MediaType;
 
 import java.util.List;
 
@@ -14,15 +15,24 @@ import java.util.List;
 public class GroqService {
 
     private static final String GROQ_URL = "https://api.groq.com/openai/v1/chat/completions";
-    private static final String MODEL = "llama-3.3-70b-versatile";
-    private static final String SYSTEM_PROMPT =
-            "You are Nutro, a friendly AI nutrition coach. Help users with diet, nutrition, meal plans, "
-            + "and health goals. Keep answers concise, warm, and practical. If asked something unrelated "
-            + "to health or nutrition, gently steer back to those topics.";
+    private static final String MODEL    = "llama-3.3-70b-versatile";
+
+    private static final String BASE_SYSTEM_PROMPT = """
+            You are Nutro, an expert AI nutrition and diet coach.
+            Your ONLY topics are: nutrition, diet, food, meal plans, calories, macros, \
+            vitamins, minerals, weight management, healthy eating habits, hydration, \
+            supplements, and related health topics.
+            If asked about ANYTHING else (movies, sports, politics, coding, etc.), \
+            respond ONLY with: "I can only help with nutrition and diet-related topics. \
+            What would you like to know about your diet or health goals?"
+            Be concise, warm, and science-based. Use bullet points for clarity when helpful.
+            """;
 
     private final RestClient restClient;
+    private final KnowledgeService knowledgeService;
 
-    public GroqService(@Value("${groq.api-key}") String apiKey) {
+    public GroqService(@Value("${groq.api-key}") String apiKey, KnowledgeService knowledgeService) {
+        this.knowledgeService = knowledgeService;
         this.restClient = RestClient.builder()
                 .baseUrl(GROQ_URL)
                 .defaultHeader("Authorization", "Bearer " + apiKey)
@@ -31,9 +41,15 @@ public class GroqService {
 
     public String chat(String userMessage) {
         try {
+            String knowledgeContext = knowledgeService.buildKnowledgeContext(userMessage);
+            String systemPrompt = knowledgeContext.isBlank()
+                    ? BASE_SYSTEM_PROMPT
+                    : BASE_SYSTEM_PROMPT + "\n\nUse the following knowledge from our nutrition resources " +
+                      "to answer accurately. Prefer this over general knowledge:\n\n" + knowledgeContext;
+
             var body = new GroqRequest(
                     MODEL,
-                    List.of(new Msg("system", SYSTEM_PROMPT), new Msg("user", userMessage)),
+                    List.of(new Msg("system", systemPrompt), new Msg("user", userMessage)),
                     0.7
             );
 
@@ -45,7 +61,7 @@ public class GroqService {
 
             if (response == null || response.choices() == null || response.choices().isEmpty()) {
                 log.warn("Groq returned empty response for message: {}", userMessage);
-                return "I'm having trouble respoasdnding right now. Please try again.";
+                return "I'm having trouble responding right now. Please try again.";
             }
             return response.choices().getFirst().message().content();
 
