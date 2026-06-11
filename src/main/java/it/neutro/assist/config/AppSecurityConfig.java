@@ -17,6 +17,7 @@ public class AppSecurityConfig {
     private static final String[] PUBLIC_PATHS = {
             "/userApi/login",
             "/userApi/login-otp",
+            "/userApi/refresh",
             "/userApi/unified/generate-otp/**",
             "/userApi/unified/login-otp",
             "/userApi/unified/login-phone",
