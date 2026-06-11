@@ -8,8 +8,8 @@ import org.springframework.scheduling.annotation.EnableScheduling;
 
 @SpringBootApplication
 @EnableScheduling
-@EntityScan(basePackages = "it.neutro.assist.knowledge")
-@EnableJpaRepositories(basePackages = "it.neutro.assist")
+@EntityScan(basePackages = {"it.neutro.assist", "com.usermanagement.modelentity"})
+@EnableJpaRepositories(basePackages = {"it.neutro.assist", "com.usermanagement.repository"})
 public class Application {
 
 	public static void main(String[] args) {

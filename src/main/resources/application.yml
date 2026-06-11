@@ -4,6 +4,8 @@ server:
 spring:
   application:
     name: it.neutro.assist
+  main:
+    allow-bean-definition-overriding: true
   config:
     import: "optional:classpath:application-local.yml"
   mail:

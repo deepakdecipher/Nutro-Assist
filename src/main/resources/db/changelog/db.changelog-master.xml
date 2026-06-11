@@ -5,8 +5,12 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <!-- Future schema migrations can be added here as new changeset files -->
     <include file="db/changelog/001-admin-user-seed.xml" relativeToChangelogFile="false"/>
     <include file="db/changelog/002-knowledge-base.xml" relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/003-user-assessments.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/004-weight-logs.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/005-diet-plan-templates.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/006-diet-plans.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/007-food-logs.sql" relativeToChangelogFile="false"/>
 
 </databaseChangeLog>

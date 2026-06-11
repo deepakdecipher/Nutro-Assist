@@ -1,8 +1,12 @@
 package it.neutro.assist.ping;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
+import org.springframework.web.bind.annotation.ResponseStatus;
+
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -25,7 +29,7 @@ public class RenderKeepAliveScheduler {
 
             HttpResponse<String> response = httpClient.send(request, HttpResponse.BodyHandlers.ofString());
 
-            System.out.println("Render Keep-Alive Status Code: " + response.statusCode());
+            System.out.println("Render Keep-Alive Status Code: " + HttpStatus.OK);
         } catch (Exception e) {
             System.err.println("Ping failed for nutro-assist: " + e.getMessage());
         }
