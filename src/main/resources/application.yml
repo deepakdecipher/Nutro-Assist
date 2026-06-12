@@ -40,6 +40,9 @@ groq:
   api-key: ${GROQ_API_KEY:test}
 
 user-management:
+  jwt:
+    token-validity-ms: 3600000       # 1 hour (default was 20 min)
+    refresh-token-validity-ms: 86400000  # 24 hours (default was 1 hour)
   email:
     enabled: ${USER_MANAGEMENT_EMAIL_ENABLED:true}
     from: ${MAIL_FROM:deepakashu28@gmail.com}

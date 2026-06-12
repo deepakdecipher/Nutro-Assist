@@ -1,7 +1,9 @@
 --liquibase formatted sql
 
---changeset nutro-assist:003-user-assessments
-CREATE TABLE user_assessments (
+--changeset nutro-assist:003-user-assessments splitStatements:false
+--preconditions onFail:MARK_RAN
+--precondition-sql-check expectedResult:0 SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public' AND table_name='user_assessments'
+CREATE TABLE IF NOT EXISTS user_assessments (
     id                    BIGSERIAL    PRIMARY KEY,
     user_id               BIGINT       NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
     full_name             VARCHAR(120) NOT NULL,

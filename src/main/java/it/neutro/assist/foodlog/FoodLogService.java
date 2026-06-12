@@ -48,13 +48,14 @@ public class FoodLogService {
                         .planMealId(req.planMealId())
                         .build());
 
-        log.setMealType(req.mealType());
-        log.setFoodName(req.foodName());
-        log.setQuantityDescription(req.quantityDescription());
-        log.setCaloriesConsumed(req.caloriesConsumed());
-        log.setProteinG(req.proteinG());
-        log.setCarbsG(req.carbsG());
-        log.setFatG(req.fatG());
+        // Derive all nutritional data from the plan meal
+        log.setMealType(planMeal.getMealType());
+        log.setFoodName(planMeal.getMealName());
+        log.setQuantityDescription(null);
+        log.setCaloriesConsumed(planMeal.getCalories());
+        log.setProteinG(planMeal.getProteinG());
+        log.setCarbsG(planMeal.getCarbsG());
+        log.setFatG(planMeal.getFatG());
 
         return FoodLogResponse.from(foodLogRepository.save(log));
     }

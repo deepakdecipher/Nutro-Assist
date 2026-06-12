@@ -1,6 +1,6 @@
 package it.neutro.assist.dietplan;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import it.neutro.assist.assessment.UserAssessment;
@@ -12,6 +12,7 @@ import org.springframework.web.client.RestClient;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 @Service
@@ -38,7 +39,8 @@ public class AiPlanGeneratorService {
 
     private String buildPrompt(UserAssessment a) {
         return """
-                You are a professional nutritionist. Generate a 30-day personalized diet plan as strict JSON.
+                You are a professional nutritionist. Generate a 7-day personalized Indian diet plan.
+                The system will automatically repeat these 7 days to cover 30 days, so focus on variety within the 7 days.
 
                 User profile:
                 - Name: %s
@@ -52,29 +54,15 @@ public class AiPlanGeneratorService {
                 - Medical conditions: %s
                 - Food interests: %s
 
-                Return ONLY valid JSON with this exact structure (no markdown, no explanations):
-                {
-                  "days": [
-                    {
-                      "dayNumber": 1,
-                      "meals": [
-                        {
-                          "mealType": "BREAKFAST",
-                          "mealName": "...",
-                          "description": "...",
-                          "calories": 350,
-                          "proteinG": 12.0,
-                          "carbsG": 45.0,
-                          "fatG": 8.0
-                        }
-                      ]
-                    }
-                  ]
-                }
+                CRITICAL RULES:
+                - Return ONLY a raw JSON object. No markdown, no code blocks, no backticks, no explanation.
+                - mealType values must be EXACTLY one of: BREAKFAST, MORNING_SNACK, LUNCH, EVENING_SNACK, DINNER
+                - Each day must have all 5 meal types in that order
+                - Total daily calories should be close to %d kcal
+                - Generate exactly 7 days (dayNumber 1 through 7)
 
-                Meal types must be exactly: BREAKFAST, MORNING_SNACK, LUNCH, EVENING_SNACK, DINNER.
-                Each day must have all 5 meal types. Total daily calories must be close to %d kcal.
-                Generate all 30 days with varied meals.
+                Required JSON structure:
+                {"days":[{"dayNumber":1,"meals":[{"mealType":"BREAKFAST","mealName":"...","description":"...","calories":350,"proteinG":12.0,"carbsG":45.0,"fatG":8.0}]}]}
                 """.formatted(
                 a.getFullName(), a.getAge(), a.getGender(),
                 a.getHeightCm(), a.getWeightKg(),
@@ -90,7 +78,8 @@ public class AiPlanGeneratorService {
 
     private String callGroq(String userPrompt) {
         var body = new GroqRequest(MODEL,
-                List.of(new Msg("user", userPrompt)), 0.7);
+                List.of(new Msg("user", userPrompt)), 0.3,
+                Map.of("type", "json_object"));
         GroqResponse response = restClient.post()
                 .contentType(MediaType.APPLICATION_JSON)
                 .body(body)
@@ -107,29 +96,53 @@ public class AiPlanGeneratorService {
             String json = extractJson(rawJson);
             JsonNode root = objectMapper.readTree(json);
             JsonNode daysNode = root.get("days");
-            if (daysNode == null || !daysNode.isArray()) {
-                throw new RuntimeException("Invalid plan JSON: missing 'days' array");
+            if (daysNode == null || !daysNode.isArray() || daysNode.isEmpty()) {
+                log.error("Invalid plan structure. Raw response: {}", rawJson);
+                throw new RuntimeException("AI returned an invalid plan structure");
             }
             List<AiPlanDay> days = new ArrayList<>();
             for (JsonNode dayNode : daysNode) {
-                int dayNumber = dayNode.get("dayNumber").asInt();
+                if (dayNode == null || !dayNode.isObject()) continue;
+                JsonNode dayNumNode = dayNode.get("dayNumber");
+                if (dayNumNode == null) continue;
+                int dayNumber = dayNumNode.asInt();
+
+                JsonNode mealsNode = dayNode.get("meals");
+                if (mealsNode == null || !mealsNode.isArray()) continue;
+
                 List<AiPlanMeal> meals = new ArrayList<>();
-                for (JsonNode mealNode : dayNode.get("meals")) {
+                for (JsonNode mealNode : mealsNode) {
+                    if (mealNode == null) continue;
+                    JsonNode typeNode = mealNode.get("mealType");
+                    if (typeNode == null) continue;
+                    MealType mealType;
+                    try {
+                        mealType = MealType.valueOf(typeNode.asText().toUpperCase().replace(" ", "_"));
+                    } catch (IllegalArgumentException ex) {
+                        log.warn("Skipping unknown mealType '{}' on day {}", typeNode.asText(), dayNumber);
+                        continue;
+                    }
                     meals.add(new AiPlanMeal(
-                            MealType.valueOf(mealNode.get("mealType").asText()),
-                            mealNode.get("mealName").asText(),
-                            mealNode.has("description") ? mealNode.get("description").asText() : "",
-                            mealNode.get("calories").asInt(),
-                            mealNode.get("proteinG").asDouble(),
-                            mealNode.get("carbsG").asDouble(),
-                            mealNode.get("fatG").asDouble()
+                            mealType,
+                            textOf(mealNode, "mealName", "Meal"),
+                            textOf(mealNode, "description", ""),
+                            intOf(mealNode, "calories", 300),
+                            doubleOf(mealNode, "proteinG", 10.0),
+                            doubleOf(mealNode, "carbsG", 40.0),
+                            doubleOf(mealNode, "fatG", 8.0)
                     ));
                 }
-                days.add(new AiPlanDay(dayNumber, meals));
+                if (!meals.isEmpty()) days.add(new AiPlanDay(dayNumber, meals));
+            }
+            if (days.isEmpty()) {
+                log.error("Parser produced 0 days. Raw response: {}", rawJson);
+                throw new RuntimeException("AI plan contained no valid days");
             }
             return days;
-        } catch (JsonProcessingException e) {
-            log.error("Failed to parse Groq plan JSON: {}", e.getMessage());
+        } catch (RuntimeException e) {
+            throw e;
+        } catch (Exception e) {
+            log.error("Failed to parse Groq plan JSON. Raw response: {}", rawJson, e);
             throw new RuntimeException("Failed to parse AI-generated diet plan. Please try again.");
         }
     }
@@ -137,8 +150,26 @@ public class AiPlanGeneratorService {
     private String extractJson(String raw) {
         int start = raw.indexOf('{');
         int end = raw.lastIndexOf('}');
-        if (start == -1 || end == -1) throw new RuntimeException("No JSON found in Groq response");
+        if (start == -1 || end == -1 || end < start) {
+            log.error("No JSON object found in Groq response: {}", raw);
+            throw new RuntimeException("No JSON found in AI response");
+        }
         return raw.substring(start, end + 1);
+    }
+
+    private static String textOf(JsonNode n, String key, String def) {
+        JsonNode v = n.get(key);
+        return (v != null && !v.isNull()) ? v.asText(def) : def;
+    }
+
+    private static int intOf(JsonNode n, String key, int def) {
+        JsonNode v = n.get(key);
+        return (v != null && !v.isNull()) ? v.asInt(def) : def;
+    }
+
+    private static double doubleOf(JsonNode n, String key, double def) {
+        JsonNode v = n.get(key);
+        return (v != null && !v.isNull()) ? v.asDouble(def) : def;
     }
 
     private static String nvl(String s) {
@@ -149,7 +180,8 @@ public class AiPlanGeneratorService {
     record AiPlanMeal(MealType mealType, String mealName, String description,
                       int calories, double proteinG, double carbsG, double fatG) {}
 
-    record GroqRequest(String model, List<Msg> messages, double temperature) {}
+    record GroqRequest(String model, List<Msg> messages, double temperature,
+                       @JsonProperty("response_format") Map<String, String> responseFormat) {}
     record Msg(String role, String content) {}
     record GroqResponse(List<Choice> choices) {}
     record Choice(MsgContent message) {}

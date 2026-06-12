@@ -185,6 +185,10 @@ public class DietPlanService {
                 .toList();
     }
 
+    public List<TemplateSummaryResponse> listPublicTemplates() {
+        return listTemplates();
+    }
+
     @Transactional
     public void deleteTemplate(Long id) {
         if (!templateRepository.existsById(id)) throw new IllegalArgumentException("Template not found");
@@ -281,8 +285,14 @@ public class DietPlanService {
             }
         }
 
+        String planName = plan.getPlanType() == PlanType.NUTRITIONIST && plan.getSourceTemplateId() != null
+                ? templateRepository.findById(plan.getSourceTemplateId())
+                        .map(DietPlanTemplate::getName)
+                        .orElse("Nutritionist Plan")
+                : "AI Generated Plan";
+
         return new WeekViewResponse(
-                plan.getId(), plan.getPlanType(), plan.getPlanStatus(),
+                plan.getId(), planName, plan.getPlanType(), plan.getPlanStatus(),
                 plan.getDailyCalorieTarget(), plan.getStartDate(), plan.getEndDate(),
                 todayConsumed, dayResponses);
     }

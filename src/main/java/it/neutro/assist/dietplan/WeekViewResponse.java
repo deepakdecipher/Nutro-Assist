@@ -5,6 +5,7 @@ import java.util.List;
 
 public record WeekViewResponse(
         Long planId,
+        String planName,
         PlanType planType,
         PlanStatus planStatus,
         int dailyCalorieTarget,

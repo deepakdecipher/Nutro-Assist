@@ -32,6 +32,11 @@ public class DietPlanController {
         return ResponseEntity.ok(dietPlanService.generateAiPlan());
     }
 
+    @GetMapping("/templates")
+    public ResponseEntity<List<TemplateSummaryResponse>> listTemplates() {
+        return ResponseEntity.ok(dietPlanService.listPublicTemplates());
+    }
+
     @PostMapping("/assign/{templateId}")
     public ResponseEntity<WeekViewResponse> assignNutritionistPlan(@PathVariable Long templateId) {
         return ResponseEntity.ok(dietPlanService.assignNutritionistPlan(templateId));

@@ -5,12 +5,15 @@
         xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
         http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-4.20.xsd">
 
-    <include file="db/changelog/001-admin-user-seed.xml" relativeToChangelogFile="false"/>
-    <include file="db/changelog/002-knowledge-base.xml" relativeToChangelogFile="false"/>
-    <include file="db/changelog/sql/003-user-assessments.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/sql/004-weight-logs.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/sql/005-diet-plan-templates.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/sql/006-diet-plans.sql" relativeToChangelogFile="false"/>
-    <include file="db/changelog/sql/007-food-logs.sql" relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/000-users-roles.sql"           relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/001-admin-user-seed.sql"       relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/002-knowledge-base.sql"        relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/003-user-assessments.sql"      relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/004-weight-logs.sql"           relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/005-diet-plan-templates.sql"   relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/006-diet-plans.sql"            relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/007-food-logs.sql"             relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/008-food-recipes.sql"          relativeToChangelogFile="false"/>
+    <include file="db/changelog/sql/009-sheet-plan-templates.sql"  relativeToChangelogFile="false"/>
 
 </databaseChangeLog>
