@@ -37,3 +37,9 @@ CREATE TABLE IF NOT EXISTS template_meals (
     fat_g         NUMERIC(6,1) DEFAULT 0,
     display_order INT          NOT NULL DEFAULT 0
 );
+
+--changeset nutro-assist:005-template-meals-add-macros splitStatements:false
+ALTER TABLE template_meals ADD COLUMN IF NOT EXISTS protein_g     NUMERIC(6,1) DEFAULT 0;
+ALTER TABLE template_meals ADD COLUMN IF NOT EXISTS carbs_g       NUMERIC(6,1) DEFAULT 0;
+ALTER TABLE template_meals ADD COLUMN IF NOT EXISTS fat_g         NUMERIC(6,1) DEFAULT 0;
+ALTER TABLE template_meals ADD COLUMN IF NOT EXISTS display_order INT          NOT NULL DEFAULT 0;
